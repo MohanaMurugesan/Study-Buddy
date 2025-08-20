@@ -5,14 +5,14 @@ from datetime import datetime
 
 class UserCreate(BaseModel):
 
-    email : EmailStr
+    token : str
     username : str
     password : str
 
 class UserResponse(BaseModel):
 
     id : UUID
-    email : str
+    email : EmailStr
     username : str
     created_at : datetime 
 

@@ -6,7 +6,7 @@ class EmailVerification(BaseModel):
 
 
 class OtpVerify(BaseModel):
-    email : EmailStr
+    token : str
     otp_code : str
 
     

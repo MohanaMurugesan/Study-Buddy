@@ -5,6 +5,8 @@ from passlib.context import CryptContext
 from fastapi import APIRouter,status,HTTPException,Depends
 from app.schemas.user import UserCreate,UserResponse
 from app.models.user import User
+from app.models.otp import Otp
+from datetime import datetime,timezone
 
 router = APIRouter(
     prefix="/auth",
@@ -28,14 +30,29 @@ def hash_password(password:str):
     return password_context.hash(password)
 
 
-@router.post("/Register",status_code=status.HTTP_201_CREATED)
+@router.post("/Create User",status_code=status.HTTP_201_CREATED)
 def create_user(db:db_dependency, create_user_request : UserCreate):
-    check_existing_user = db.query(User).filter (User.email == create_user_request.email).first()
+    
+    # check whether it is the verified user
+
+    otp_record = db.query(Otp).filter(Otp.token == create_user_request.token,
+                                      Otp.expires_at > datetime.now(timezone.utc),
+                                      Otp.is_verified == True).first()
+
+    if not otp_record:
+        raise HTTPException(status_code=400,detail="Invalid")
+    
+    email = otp_record.email
+
+    # check whether the user already created a account or not
+    
+    check_existing_user = db.query(User).filter (User.email == email).first()
     if check_existing_user:
         raise HTTPException(status_code=400,detail="Existing email id")
-
+    
+    
     new_user = User(
-        email = create_user_request.email,
+        email = email,
         username = create_user_request.username,
        password= hash_password(create_user_request.password),
        is_verified = True
