@@ -10,6 +10,7 @@ from email.mime.text import MIMEText
 from dotenv import load_dotenv
 import os
 import secrets
+from app.utils.hashing import hash_otp,password_context
 
 
 router = APIRouter(
@@ -52,7 +53,7 @@ def send_registration_otp(db:db_dependency,
     expires_at = datetime.now(timezone.utc) + timedelta(minutes = 5)
 
     token = secrets.token_urlsafe(16)
-
+    hashed_otp = hash_otp(otp_code)
     next_otp_time_interval = 60
 
     otp_record = db.query(Otp).filter(Otp.email == email_verification.email).first()
@@ -64,7 +65,7 @@ def send_registration_otp(db:db_dependency,
                 status_code=429,
                 detail=f"OTP already sent,please wait {int(next_otp_time_interval - last_otp_request)} seconds."
             )
-        otp_record.otp_code = otp_code
+        otp_record.otp_code = hashed_otp
         otp_record.expires_at = expires_at
         otp_record.is_verified = False
         otp_record.token = token
@@ -73,7 +74,7 @@ def send_registration_otp(db:db_dependency,
     else:
         otp_record= Otp(
             email = email_verification.email,
-            otp_code = otp_code,
+            otp_code = hashed_otp,
             expires_at = expires_at,
             token = token,
             last_requested_time = datetime.now(timezone.utc)
@@ -96,7 +97,7 @@ def verify_otp(db:db_dependency,otp_verify:OtpVerify):
     if not otp_record:
         raise HTTPException(status_code=404,detail="OTP not found")
     
-    if otp_record.otp_code != otp_verify.otp_code:
+    if not password_context.verify(otp_verify.otp_code,otp_record.otp_code):
         raise HTTPException(status_code=400,detail="Invalid OTP")
     
     if otp_record.expires_at.replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):

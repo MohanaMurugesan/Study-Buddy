@@ -12,7 +12,7 @@ class Otp(Base):
     id = Column(UUID(as_uuid=True),primary_key=True,default=uuid.uuid4)
     email = Column(String,nullable=False)
     otp_code = Column(String,nullable=False)
-    expires_at = Column(TIMESTAMP,nullable= False, default=lambda: datetime.now(timezone.utc) + timedelta(minutes=5))
+    expires_at = Column(TIMESTAMP(timezone=True),nullable= False, default=lambda: datetime.now(timezone.utc) + timedelta(minutes=5))
     is_verified = Column(Boolean,default=False)
     created_at = Column(TIMESTAMP(timezone=True),server_default=func.now())
     token = Column(String,unique = True,nullable = False)

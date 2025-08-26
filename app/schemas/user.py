@@ -9,6 +9,11 @@ class UserCreate(BaseModel):
     username : str
     password : str
 
+class LoginUser(BaseModel):
+    
+    username : str
+    password : str
+
 class UserResponse(BaseModel):
 
     id : UUID
