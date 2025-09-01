@@ -1,12 +1,8 @@
-from app.database import SessionLocal
 from typing import Annotated
 from app.database import get_db
 from sqlalchemy.orm import Session
-from app.utils.hashing import hash_password,password_context
 from fastapi import APIRouter,status,HTTPException,Depends,Response,Request
 from app.schemas.user import UserCreate,UserResponse
-from app.models.user import User
-from app.models.otp import Otp
 from datetime import datetime,timezone
 from app.utils.jwt import create_access_token,create_refresh_token
 from datetime import timedelta
@@ -15,6 +11,7 @@ from dotenv import load_dotenv
 import os
 from app.models.tokens import RefreshToken
 from fastapi.security import OAuth2PasswordRequestForm
+from app.crud import auth as crud_auth
 
 router = APIRouter(
     prefix="/auth",
@@ -35,9 +32,7 @@ def create_user(db:db_dependency, create_user_request : UserCreate):
     
     # check whether it is the verified user
 
-    otp_record = db.query(Otp).filter(Otp.token == create_user_request.token,
-                                      Otp.expires_at > datetime.now(timezone.utc),
-                                      Otp.is_verified == True).first()
+    otp_record = crud_auth.verify_otp(db,create_user_request.token)
 
     if not otp_record:
         raise HTTPException(status_code=400,detail="Invalid")
@@ -46,45 +41,28 @@ def create_user(db:db_dependency, create_user_request : UserCreate):
 
     # check whether the user already created a account or not
     
-    check_existing_user = db.query(User).filter (User.email == email).first()
-    if check_existing_user:
+    if crud_auth.get_user_by_email(db,email):
         raise HTTPException(status_code=400,detail="Existing email id")
     
     
-    new_user = User(
-        email = email,
-        username = create_user_request.username,
-       password= hash_password(create_user_request.password),
-       is_verified = True
-    )
-
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    new_user = crud_auth.create_user(db,
+                                     email,
+                                     create_user_request.username,
+                                     create_user_request.password)
 
     return UserResponse.model_validate(new_user)
 
 @router.post("/login",status_code=status.HTTP_200_OK)
 def login(db:db_dependency,response:Response,form_data:OAuth2PasswordRequestForm = Depends()):
-    username = form_data.username
-    password = form_data.password
+    user = crud_auth.get_user_by_username(db,form_data.username)
 
-    user_details=db.query(User).filter(User.username == username).first()
-
-    if not user_details or not password_context.verify(password,user_details.password):
+    if not user or not crud_auth.verify_password(form_data.password,user.password):
         raise HTTPException(status_code=401,detail="Invalid username or password")
     
-    access_token = create_access_token(user_details.id,timedelta(minutes=20))
-    refresh_token = create_refresh_token(user_details.id,timedelta(days=7))
+    access_token = create_access_token(user.id,timedelta(minutes=20))
+    refresh_token = create_refresh_token(user.id,timedelta(days=7))
     
-    refresh_token_db = RefreshToken(
-        token = refresh_token,
-        user_id = user_details.id,
-        expires_at = datetime.now(timezone.utc) + timedelta(days=7)
-    )
-
-    db.add(refresh_token_db)
-    db.commit()
+    crud_auth.save_refresh_token(db,refresh_token,user.id,timedelta(days=7))
 
     response.set_cookie(
         key="refresh_token",
@@ -107,11 +85,7 @@ def refresh_access_token(db:db_dependency,request: Request,response:Response):
     if not refresh_cookie_token :
         raise HTTPException(status_code=401,detail="Missing refresh token")
     
-    db_token=db.query(RefreshToken).filter(
-        RefreshToken.token == refresh_cookie_token,
-        RefreshToken.revoked == False,
-        RefreshToken.expires_at > datetime.now(timezone.utc)
-    ).first()
+    db_token=crud_auth.get_valid_refresh_token(db,refresh_cookie_token) 
 
     if not db_token:
         raise HTTPException(status_code=401,detail="Invalid or expired refresh token")
@@ -161,12 +135,7 @@ def logout(request:Request,db:db_dependency,response:Response):
 
     db_token=db.query(RefreshToken).filter(RefreshToken.token == refresh_token).first()
 
-    if not db_token:
-        raise HTTPException(status_code=401,detail="Invalid refresh token")
-    
-    db_token.revoked = True
-    db_token.expires_at = datetime.now(timezone.utc)
-    db.commit()
+    crud_auth.revoke_refresh_token(db,refresh_token)
 
     response.delete_cookie(
             key = "refresh_token",

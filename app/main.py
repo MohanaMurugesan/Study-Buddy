@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import auth,otp,user
+from app.routers import auth,otp,user,profile
 from app.database import Base,engine
 from app.schedular import start_scheduler
 from contextlib import asynccontextmanager
@@ -31,3 +31,4 @@ def home():
 app.include_router(auth.router)
 app.include_router(otp.router)
 app.include_router(user.router)
+app.include_router(profile.router)

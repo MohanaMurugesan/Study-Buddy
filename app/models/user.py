@@ -2,6 +2,7 @@ from app.database import Base
 from sqlalchemy import Column,String,TIMESTAMP,Boolean,func
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
+from sqlalchemy.orm import relationship
 
 
 
@@ -15,7 +16,8 @@ class User(Base):
     created_at = Column(TIMESTAMP(timezone=True),server_default=func.now())
     is_verified = Column(Boolean,default=False)
     
-    
+    profile = relationship("Profile", back_populates="user", uselist=False)
+
 
 
 
