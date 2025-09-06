@@ -8,7 +8,7 @@ class ProfileBase(BaseModel):
     profile_picture : Optional[str] = None
     bio : Optional[str] = None
     location : Optional[str] = None
-    preferred_language : Optional[str] = None
+    preferred_language : Optional[List[str]] = None
     subjects: Optional[List[str]] = None
     availability : Optional[Dict[str,str]] = None
     study_goals :Optional[str] = None

@@ -1,4 +1,4 @@
-from fastapi import APIRouter,status,Depends,status
+from fastapi import APIRouter,status,Depends,HTTPException
 from app.routers.auth import db_dependency
 from app.dependencies import get_current_user
 from typing import Annotated
@@ -14,16 +14,30 @@ user_dependency = Annotated[dict,Depends(get_current_user)]
 
 @router.post("/",response_model=ProfileResponse,status_code=status.HTTP_201_CREATED)
 def create_user(profile:ProfileCreate,db:db_dependency,user:user_dependency):
-    return  profile_crud.create_profile(db,user.id,profile)
+    result=profile_crud.create_profile(db,user.id,profile)
+    if not result:
+        raise HTTPException(status_code=400,detail="Profile already exist")
+    return result
+
 
 @router.get("/me",response_model=ProfileResponse,status_code=status.HTTP_200_OK)
 def get_profile(db:db_dependency,user:user_dependency):
-    return profile_crud.get_profile(db,user.id)
+    result=profile_crud.get_profile(db,user.id)
+    if not result:
+        raise HTTPException(status_code=404,detail="Profile not found")
+    return result
 
-@router.put("/me",status_code=status.HTTP_200_OK)
+@router.patch("/me",status_code=status.HTTP_200_OK)
 def update_profile(profile:ProfileUpdate,db:db_dependency,user:user_dependency):
-    return profile_crud.update_profile(db,user.id,profile)
+    result= profile_crud.update_profile(db,user.id,profile)
+    if not result:
+        raise HTTPException(status_code=404,detail="Profile not found")
+    return result
 
-@router.delete("/me",status_code=status.HTTP_204_NO_CONTENT)
+
+@router.delete("/me",status_code=status.HTTP_200_OK)
 def delete_profile(db:db_dependency,user:user_dependency):
-    return profile_crud.delete_profile(db,user.id)
+    result= profile_crud.delete_profile(db,user.id)
+    if not result:
+        raise HTTPException(status_code=404,detail="Profile not found")
+    return result

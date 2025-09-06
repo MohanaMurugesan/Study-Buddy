@@ -44,7 +44,10 @@ def create_user(db:db_dependency, create_user_request : UserCreate):
     if crud_auth.get_user_by_email(db,email):
         raise HTTPException(status_code=400,detail="Existing email id")
     
-    
+    # check whether the username exist
+    if crud_auth.get_user_by_username(db,create_user_request.username):
+        raise HTTPException(status_code=400,detail="username already exist")
+
     new_user = crud_auth.create_user(db,
                                      email,
                                      create_user_request.username,

@@ -17,7 +17,7 @@ class Profile(Base):
     profile_picture=Column(String,nullable=True)
     study_goals=Column(Text,nullable=True)
     location = Column(String,nullable=True)
-    preferred_language = Column(String,nullable = True)
+    preferred_language = Column(JSON,nullable = True)
     created_at = Column(DateTime , default=lambda: datetime.now(timezone.utc))
     updated_at=Column(DateTime,default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 

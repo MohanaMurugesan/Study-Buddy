@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, BackgroundTasks
+from fastapi import APIRouter, status, BackgroundTasks,HTTPException
 from app.routers.auth import db_dependency
 from app.schemas.otp import EmailVerification, OtpVerify
 from app.crud import otp as otp_crud
@@ -17,6 +17,10 @@ def send_registration_otp(
     background_task: BackgroundTasks
     ):
     otp_code, token = otp_crud.create_or_update_otp(db, email_verification.email)
+    
+    if not otp_code or not token:
+        raise HTTPException(status_code=400, detail="Email already exists or OTP rate limit exceeded")
+
 
     background_task.add_task(send_otp_mail, email_verification.email, otp_code)
 
@@ -28,5 +32,8 @@ def verify_otp(
     db: db_dependency,
     otp_verify: OtpVerify
     ):
-    otp_crud.verify_otp(db, otp_verify)
+    verified=otp_crud.verify_otp(db, otp_verify)
+
+    if not verified:
+        raise HTTPException(status_code=400, detail="OTP invalid, expired, or not found")
     return {"message": "OTP verified successfully", "verified_token": otp_verify.token}

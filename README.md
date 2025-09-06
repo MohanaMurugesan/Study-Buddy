@@ -6,6 +6,8 @@ A study buddy app for group and solo study!
 - User registration with email
 - OTP based email verification
 - Automatic cleanup of expired OTPs
+- Creating Profile
+- Communities for group study
 
 ## Tech Stack
 
