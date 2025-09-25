@@ -1,5 +1,5 @@
 from app.database import Base
-from sqlalchemy import Column,String,TIMESTAMP,Boolean,func,JSON
+from sqlalchemy import Column,String,TIMESTAMP,Boolean,func
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from sqlalchemy.orm import relationship
@@ -20,6 +20,7 @@ class User(Base):
     profile = relationship("Profile", back_populates="user", uselist=False)
     communities=relationship("Community",back_populates="owner")
     community_membership = relationship("CommunityMembership",back_populates="member")
+    messages = relationship("Message", back_populates="sender")
 
 
     

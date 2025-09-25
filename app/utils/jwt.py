@@ -2,7 +2,8 @@ from datetime import timedelta,datetime,timezone
 from jose import jwt,JWTError
 from dotenv import load_dotenv
 import os
-from fastapi import HTTPException,status
+from fastapi import HTTPException
+import uuid
 
 
 load_dotenv()
@@ -11,7 +12,7 @@ SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 ALGORITHM = os.getenv("JWT_ALGORITHM")
 
 
-def create_access_token(user_id:int,expires_at: timedelta):
+def create_access_token(user_id:uuid.UUID,expires_at: timedelta):
     to_encode = {'sub': str(user_id),
               'iat':int(datetime.now(timezone.utc).timestamp()),
               'type':'access'
@@ -33,7 +34,7 @@ def decode_access_token(token:str):
             headers={"WWW-Authenticate":"Bearer"}
         )
     
-def create_refresh_token(user_id:int,expires_at:timedelta):
+def create_refresh_token(user_id:uuid.UUID,expires_at:timedelta):
     to_encode = {
         "sub":str(user_id),
         "iat": int(datetime.now(timezone.utc).timestamp()),

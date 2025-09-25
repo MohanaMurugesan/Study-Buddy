@@ -33,7 +33,7 @@ def get_all_communities(db:db_dependency,user:user_dependency):
         return {"detail":"No community found"}
     return all_community
 
-@router.get("/get-community-by-id/{id}",status_code=status.HTTP_200_OK)
+@router.get("/get-community-by-id/{community_id}",status_code=status.HTTP_200_OK)
 def get_communities_by_id(db:db_dependency,user:user_dependency,community_id:uuid.UUID):
     community_by_id = community_crud.get_community_by_id(db,community_id)
     if not community_by_id:
