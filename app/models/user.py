@@ -21,6 +21,7 @@ class User(Base):
     communities=relationship("Community",back_populates="owner")
     community_membership = relationship("CommunityMembership",back_populates="member")
     messages = relationship("Message", back_populates="sender")
+    attachments = relationship("Attachment",back_populates="user")
 
 
     

@@ -217,3 +217,11 @@ def get_communities_of_a_member(db:Session,member_id:uuid.UUID):
     if not communities:
         return None
     return communities  
+
+
+def is_user_in_community(db: Session, user_id: uuid.UUID, community_id: uuid.UUID) -> bool:
+    membership = db.query(CommunityMembership).filter(
+        CommunityMembership.member_id == user_id,
+        CommunityMembership.community_id == community_id
+    ).first()
+    return membership is not None

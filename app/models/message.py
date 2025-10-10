@@ -14,3 +14,5 @@ class Message(Base):
     created_at = Column(DateTime,default=datetime.now(timezone.utc),nullable=False)
 
     sender = relationship("User", back_populates="messages")
+    community = relationship("Community",back_populates="messages")
+    attachments = relationship("Attachment",back_populates="message")

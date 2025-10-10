@@ -22,6 +22,8 @@ class Community(Base):
 
     owner=relationship("User",back_populates="communities")
     membership=relationship("CommunityMembership",back_populates="community",cascade="all,delete-orphan")
+    messages = relationship("Message",back_populates="community")
+    attachments = relationship("Attachment",back_populates="community")
 
 class CommunityMembership(Base):
     __tablename__="community_members"

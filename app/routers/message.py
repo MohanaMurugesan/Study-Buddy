@@ -9,6 +9,8 @@ from app.routers.auth import db_dependency
 from app.routers.profile import user_dependency
 from typing import List
 import json
+from app.crud import community as community_crud
+
 
 router = APIRouter(
     prefix="/messages",
@@ -42,6 +44,12 @@ async def community_chat(websocket: WebSocket, community_id: str):
 
     # 4. Open a manual DB session
     db = SessionLocal()
+
+    is_member = community_crud.is_user_in_community(db, user_id=uuid.UUID(user_id), community_id=uuid.UUID(community_id))
+    if not is_member:
+        await websocket.close(code=4003)  # Custom code for "not a member"
+        db.close()
+        return
 
     # 5. Register the user’s connection in the ConnectionManager
     await manager.connect(community_id, websocket)
