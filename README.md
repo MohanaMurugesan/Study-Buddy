@@ -1,6 +1,6 @@
 # Study-Buddy
 
-A study buddy app for group and solo study!
+A study buddy app for group study!
 
 # Features
 - User registration with email
@@ -8,6 +8,7 @@ A study buddy app for group and solo study!
 - Automatic cleanup of expired OTPs
 - Creating Profile
 - Communities for group study
+- Document sharing
 
 ## Tech Stack
 
